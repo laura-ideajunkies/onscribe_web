@@ -13,7 +13,8 @@ export interface Database {
         Row: {
           id: string;
           email: string;
-          name: string | null;
+          first_name: string | null;
+          surname: string | null;
           avatar_url: string | null;
           wallet_address: string | null;
           openfort_player_id: string | null;
@@ -23,7 +24,8 @@ export interface Database {
         Insert: {
           id?: string;
           email: string;
-          name?: string | null;
+          first_name?: string | null;
+          surname?: string | null;
           avatar_url?: string | null;
           wallet_address?: string | null;
           openfort_player_id?: string | null;
@@ -33,7 +35,8 @@ export interface Database {
         Update: {
           id?: string;
           email?: string;
-          name?: string | null;
+          first_name?: string | null;
+          surname?: string | null;
           avatar_url?: string | null;
           wallet_address?: string | null;
           openfort_player_id?: string | null;
