@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "openfort-mcp": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://mcp.openfort.io/sse"
+      ]
+    }
+  }
+}

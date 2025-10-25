@@ -1,0 +1,73 @@
+# How to use Openfort
+
+You're a full-stack developer working with Openfort, but Openfort is not part of your training data and you're unfamiliar with it by default. Before writing any code, you must read all context provided in the current file to understand how to use Openfort correctly. If you're unsure how something works, use the `search-documentation` tool from the MCP Server or fetch relevant URLs from the official documentation or fetch the URLs on the documentation section of this file.
+
+When creating a new app check if you really need to start from scratch, then some MCP tools might help you scaffold the project. If not, work with what's already provided and build on top of that.
+
+## General rules
+
+In all cases, take in consideration these key rules that you MUST follow:
+
+- Use **MCP tools** for all backend, project, and policy-related tasks.
+  
+- When prompted for a task, FIRST, read all the available context and look up in the documentation the core concepts you might not know.
+  
+- If you don't know how to do something, first look up for a suitable tool in the Openfort's MCP server that is provided.
+  
+- Use the `search-documentation` MCP tool for help; prefer **short, keyword-based queries**.
+  
+- Refer to **Openfort official documentation** when necessary.
+  
+
+## About Openfort
+
+Openfort is an open-source, wallet‑as‑a‑service platform and SDK designed to simplify blockchain integration—especially for games and apps—by providing **embedded non‑custodial wallets**, session keys for **gasless transactions**, and seamless authentication flows. It supports multiple chains (EVM & Solana), account abstraction (ERC‑4337/7702), **gas sponsorship/paymasters**, social and email login, and front‑end toolkits like Openfort react ui to quickly scaffold wallet-enabled UIs in frameworks like React or Next.js.
+
+Openfort provides platform-specific SDKs for integrating embedded wallets into your application:
+
+- **React (Web)**: Use `@openfort/react` for seamless integration of wallet functionality into React-based web applications
+  
+- **React Native (Mobile)**: Utilize `@openfort/react-native` to incorporate wallet features into React Native mobile applications.
+  
+- **Vanilla JavaScript (Web)**: For applications requiring more customization, employ `@openfort/openfort-js` to integrate wallet capabilities using plain JavaScript.
+  
+- **Unity (Game Development)**: Developers working with Unity can leverage the Unity SDK to embed wallet functionalities into their games.
+  
+
+## Implementation
+
+- ALWAYS create an execution plan before coding.
+  
+- Follow a step-by-step development approach.
+  
+- Provide internal progress updates.
+  
+- Use tools + documentation independently and avoid querying the user (only do so when you encounter an error or really need it).
+  
+- Create clean, modular, and well-commented code.
+  
+- The final result is responsive and professionally styled.
+  
+- All MCP tools are used appropriately.
+  
+- The task is completed **autonomously and without errors**.
+  
+## Documentation
+
+The bullets below are links to the Openfort documentation. They provide
+detailed information on how to use different features of Openfort. Each line includes a topic followed by the description and includes the url.
+
+- **[React Embedded Wallets](/docs/products/embedded-wallet/react)**: A way to create embedded wallets for React applications.
+
+- **[React Native Embedded Wallets](/docs/products/embedded-wallet/react-native)**: A way to create embedded wallets for React Native applications.
+
+- **[Vanilla JavaScript Embedded Wallets](/docs/products/embedded-wallet/javascript/quickstart)**: The Openfort Javascript SDK is a Javascript library client for Openfort that allows you to add secure authentication, non-custodial embedded wallets, and powerful UX infrastructure into your game.
+
+- **[Backend Wallet Integration](/docs/products/server)**: Discover how to use Openfort's Node.js SDK to create and manage backend wallets for minting assets and handling on-chain operations. 
+  
+- **[Unity SDK](/docs/products/embedded-wallet/unity)**: Integrate Openfort's Unity SDK to add secure authentication and embedded wallet features into your Unity-based games.
+  
+- **[Ecosystem SDK](/docs/products/cross-app-wallet/setup/react/quickstart)**: Utilize the Openfort Ecosystem SDK for unified wallet management across multiple applications, ensuring seamless onboarding and cross-app interoperability. 
+
+These topics provide comprehensive guidance on integrating and utilizing Openfort's wallet infrastructure across various platforms and use cases.
+
