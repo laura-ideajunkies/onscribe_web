@@ -47,3 +47,7 @@ export function isValidUrl(url: string): boolean {
     return false;
   }
 }
+
+export function getBlockExplorerUrl(txHash: string): string {
+  return `https://sepolia.etherscan.io/tx/${txHash}`;
+}

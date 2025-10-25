@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { UpdateArticleInput } from '@/types';
+import { Database } from '@/types/database';
 
 export async function GET(
   request: NextRequest,
@@ -11,17 +12,7 @@ export async function GET(
 
     const { data: article, error } = await supabase
       .from('articles')
-      .select(
-        `
-        *,
-        author:users (
-          id,
-          name,
-          email,
-          avatar_url
-        )
-      `
-      )
+      .select('*')
       .eq('id', params.id)
       .single();
 
@@ -47,30 +38,31 @@ export async function PATCH(
     const body: UpdateArticleInput = await request.json();
     const supabase = getServiceSupabase();
 
-    // Get user from session
-    const userId = request.headers.get('x-user-id');
-    if (!userId) {
+    // Get Openfort player ID from session
+    const openfortPlayerId = request.headers.get('x-user-id');
+    if (!openfortPlayerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Verify ownership
     const { data: existing } = await supabase
       .from('articles')
-      .select('author_id')
+      .select('openfort_player_id')
       .eq('id', params.id)
-      .single();
+      .single<{ openfort_player_id: string }>();
 
-    if (!existing || existing.author_id !== userId) {
+    if (!existing || existing.openfort_player_id !== openfortPlayerId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Update article
-    const { data: article, error } = await supabase
-      .from('articles')
-      .update({
-        ...body,
-        updated_at: new Date().toISOString(),
-      })
+    const updateData: Database['public']['Tables']['articles']['Update'] = {
+      ...body,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: article, error } = await (supabase.from('articles') as any)
+      .update(updateData)
       .eq('id', params.id)
       .select()
       .single();
@@ -99,20 +91,20 @@ export async function DELETE(
   try {
     const supabase = getServiceSupabase();
 
-    // Get user from session
-    const userId = request.headers.get('x-user-id');
-    if (!userId) {
+    // Get Openfort player ID from session
+    const openfortPlayerId = request.headers.get('x-user-id');
+    if (!openfortPlayerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Verify ownership
     const { data: existing } = await supabase
       .from('articles')
-      .select('author_id')
+      .select('openfort_player_id')
       .eq('id', params.id)
-      .single();
+      .single<{ openfort_player_id: string }>();
 
-    if (!existing || existing.author_id !== userId) {
+    if (!existing || existing.openfort_player_id !== openfortPlayerId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

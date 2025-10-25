@@ -3,13 +3,36 @@
 import { OpenfortProvider as BaseOpenfortProvider, AuthProvider as OpenfortAuthProvider, getDefaultConfig } from '@openfort/react';
 import { AccountTypeEnum } from '@openfort/openfort-js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider, createConfig } from 'wagmi';
-import { base } from 'wagmi/chains';
+import { WagmiProvider, createConfig, http } from 'wagmi';
+import { defineChain } from 'viem';
+
+const storyTestnet = defineChain({ 
+  id: 1315, 
+  name: "storyTestnet", 
+  network: "Story Testnet", 
+  nativeCurrency: { name: "Story", symbol: "IP", decimals: 18 }, 
+  rpcUrls: { 
+    default: { 
+      http: [ 
+        'https://aeneid.storyrpc.io'
+      ] 
+    }, 
+  }, 
+  blockExplorers: { 
+    default: { 
+      name: 'explorer', 
+      url: 'https://aeneid.storyscan.io', 
+    }, 
+  },
+  testnet: true, // or true, if live
+});
+
 
 const wagmiConfig = createConfig(
   getDefaultConfig({
     appName: 'OnScribe',
-    chains: [base],
+    chains: [storyTestnet],
+    transports: {[storyTestnet.id]: http()}, // Using HTTP transport for Story Testnet
     ssr: false,
   })
 );
@@ -24,14 +47,15 @@ export function OpenfortProvider({ children }: { children: React.ReactNode }) {
           publishableKey={process.env.NEXT_PUBLIC_OPENFORT_PUBLIC_KEY!}
           walletConfig={{
             shieldPublishableKey: process.env.NEXT_PUBLIC_SHIELD_PUBLISHABLE_KEY!,
-            createEncryptedSessionEndpoint: 'https://onscribe-vercelendpoint.vercel.app/api/shield-session',
+            createEncryptedSessionEndpoint: 'https://onscribe-shield2.vercel.app/api/create-session',
             recoverWalletAutomaticallyAfterAuth: true, // Automatically recover wallet after authentication
-            accountType: AccountTypeEnum.SMART_ACCOUNT, // Use Smart Account (default, enables gas sponsorship)
+            accountType: AccountTypeEnum.EOA, // Use Smart Account (default, enables gas sponsorship)
             ethereumProviderPolicyId: {
-              [base.id]: process.env.NEXT_PUBLIC_OPENFORT_GAS_POLICY_ID!, // Gas sponsorship policy for Base
+              [storyTestnet.id]: process.env.NEXT_PUBLIC_OPENFORT_GAS_POLICY_ID!, // Gas sponsorship policy for Base
             },
           }}
           uiConfig={{
+            enforceSupportedChains: false, 
             authProviders: [
               OpenfortAuthProvider.EMAIL,
               OpenfortAuthProvider.GOOGLE,

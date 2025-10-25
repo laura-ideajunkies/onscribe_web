@@ -5,16 +5,16 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = getServiceSupabase();
 
-    // Get user from session
-    const userId = request.headers.get('x-user-id');
-    if (!userId) {
+    // Get Openfort player ID from session
+    const openfortPlayerId = request.headers.get('x-user-id');
+    if (!openfortPlayerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { data: articles, error } = await supabase
       .from('articles')
       .select('*')
-      .eq('author_id', userId)
+      .eq('openfort_player_id', openfortPlayerId)
       .order('updated_at', { ascending: false });
 
     if (error) {

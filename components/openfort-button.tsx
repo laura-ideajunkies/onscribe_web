@@ -17,16 +17,15 @@ export function OpenfortButton({
 }: OpenfortButtonProps) {
   return (
     <OpenfortAuthButton.Custom>
-      {({ isLoading, show }) => (
+      {({ show }: any) => (
         <Button
           variant={variant}
           size={size}
           className={`btn-gradient ${className || ''}`}
           onClick={show}
-          disabled={isLoading}
         >
           <Wallet className="mr-2 h-4 w-4" />
-          {isLoading ? 'Loading...' : 'Sign Up'}
+          Sign Up
         </Button>
       )}
     </OpenfortAuthButton.Custom>

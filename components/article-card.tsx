@@ -21,10 +21,22 @@ export function ArticleCard({ article }: ArticleCardProps) {
   const excerpt =
     article.excerpt || extractExcerpt(article.content || '', 160);
 
+  // Generate a consistent color based on article ID
+  const colors = [
+    'bg-gradient-to-br from-purple-400 to-pink-500',
+    'bg-gradient-to-br from-blue-400 to-cyan-500',
+    'bg-gradient-to-br from-green-400 to-emerald-500',
+    'bg-gradient-to-br from-orange-400 to-red-500',
+    'bg-gradient-to-br from-indigo-400 to-purple-500',
+    'bg-gradient-to-br from-pink-400 to-rose-500',
+  ];
+  const colorIndex = article.id.charCodeAt(0) % colors.length;
+  const placeholderColor = colors[colorIndex];
+
   return (
     <Link href={`/article/${article.slug}`}>
-      <Card className="glass-card overflow-hidden cursor-pointer">
-        {article.cover_image && (
+      <Card className="glass-card overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
+        {article.cover_image ? (
           <div className="relative w-full h-48">
             <Image
               src={article.cover_image}
@@ -32,6 +44,12 @@ export function ArticleCard({ article }: ArticleCardProps) {
               fill
               className="object-cover"
             />
+          </div>
+        ) : (
+          <div className={`relative w-full h-48 ${placeholderColor} flex items-center justify-center`}>
+            <h4 className="text-2xl font-bold text-white/90 px-6 text-center line-clamp-2">
+              {article.title}
+            </h4>
           </div>
         )}
         <CardHeader className="pb-3">

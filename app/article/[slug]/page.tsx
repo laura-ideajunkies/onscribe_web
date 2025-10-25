@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { getServiceSupabase } from '@/lib/supabase';
 import { Article } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,35 +18,27 @@ import {
 import { formatDate, getBlockExplorerUrl } from '@/lib/utils';
 
 async function getArticle(slug: string): Promise<Article | null> {
-  const { data, error } = await supabase
-    .from('articles')
-    .select(
-      `
-      *,
-      author:users (
-        id,
-        name,
-        email,
-        avatar_url,
-        wallet_address
-      )
-    `
-    )
+  const supabase = getServiceSupabase();
+
+  const { data, error } = await (supabase.from('articles') as any)
+    .select('*')
     .eq('slug', slug)
     .eq('status', 'published')
     .single();
 
-  if (error || !data) {
+  if (error) {
+    console.error('Error fetching article:', error);
+    return null;
+  }
+
+  if (!data) {
     return null;
   }
 
   // Increment views
-  await supabase.rpc('increment_article_views', { article_slug: slug });
+  await (supabase as any).rpc('increment_article_views', { article_slug: slug });
 
-  return {
-    ...data,
-    author: data.author,
-  } as Article;
+  return data as Article;
 }
 
 export default async function ArticlePage({
@@ -59,6 +51,14 @@ export default async function ArticlePage({
   if (!article) {
     notFound();
   }
+
+  // Debug logging
+  console.log('Article data:', {
+    title: article.title,
+    hasContent: !!article.content,
+    contentLength: article.content?.length,
+    contentPreview: article.content?.substring(0, 100)
+  });
 
   const status = article.ip_asset_id ? 'protected' : 'pending';
 
@@ -95,7 +95,7 @@ export default async function ArticlePage({
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <IPProtectionBadge status={status} />
-              {article.views > 0 && (
+              {article.views && article.views > 0 && (
                 <span className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Eye className="h-4 w-4" />
                   {article.views} views
@@ -105,22 +105,20 @@ export default async function ArticlePage({
 
             <h1 className="text-5xl font-bold mb-6">{article.title}</h1>
 
+            {article.excerpt && (
+              <p className="text-xl text-muted-foreground mb-6 leading-relaxed">
+                {article.excerpt}
+              </p>
+            )}
+
             {/* Author Info */}
             <div className="flex items-center justify-between pb-6 border-b">
               <div className="flex items-center gap-4">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage
-                    src={article.author?.avatar_url}
-                    alt={article.author?.name || 'Author'}
-                  />
-                  <AvatarFallback>
-                    {article.author?.name?.charAt(0).toUpperCase() || 'A'}
-                  </AvatarFallback>
+                  <AvatarFallback>A</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-semibold">
-                    {article.author?.name || 'Anonymous'}
-                  </p>
+                  <p className="font-semibold">Author</p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-3 w-3" />
                     <span>{formatDate(article.published_at!)}</span>
@@ -137,7 +135,14 @@ export default async function ArticlePage({
 
           {/* Article Content */}
           <div
-            className="prose prose-lg max-w-none mb-12"
+            className="prose prose-lg prose-slate dark:prose-invert max-w-none mb-12
+                       prose-headings:font-bold prose-headings:tracking-tight
+                       prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl
+                       prose-p:text-lg prose-p:leading-relaxed prose-p:mb-6
+                       prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                       prose-img:rounded-lg prose-img:shadow-lg
+                       prose-blockquote:border-l-primary prose-blockquote:italic
+                       prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
 
@@ -145,25 +150,42 @@ export default async function ArticlePage({
           <Card className="mb-8">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <Shield className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                <Shield className="h-6 w-6 text-green-600 flex-shrink-0 mt-1" />
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold mb-2">
                     IP Protection Status
                   </h3>
 
                   {article.ip_asset_id ? (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <p className="text-sm text-muted-foreground">
                         This article is protected as an NFT on Story Protocol with
                         a Non-Commercial Social Remixing license.
                       </p>
 
+                      <a
+                        href={`https://aeneid.explorer.story.foundation/ipa/${article.ip_asset_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                          View IP Asset on Story Protocol
+                          <ExternalLink className="ml-2 h-4 w-4" />
+                        </Button>
+                      </a>
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="font-medium mb-1">IP Asset ID</p>
-                          <p className="text-muted-foreground font-mono text-xs break-all">
+                          <a
+                            href={`https://aeneid.explorer.story.foundation/ipa/${article.ip_asset_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary text-xs font-mono hover:underline flex items-center gap-1 break-all"
+                          >
                             {article.ip_asset_id}
-                          </p>
+                            <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                          </a>
                         </div>
 
                         <div>
@@ -177,7 +199,7 @@ export default async function ArticlePage({
                           <div>
                             <p className="font-medium mb-1">IPFS Hash</p>
                             <a
-                              href={`https://ipfs.io/ipfs/${article.ipfs_hash}`}
+                              href={`https://${process.env.NEXT_PUBLIC_PINATA_GATEWAY}/ipfs/${article.ipfs_hash}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-primary text-xs font-mono hover:underline flex items-center gap-1"
@@ -192,7 +214,7 @@ export default async function ArticlePage({
                           <div>
                             <p className="font-medium mb-1">Transaction</p>
                             <a
-                              href={`https://sepolia.etherscan.io/tx/${article.transaction_hash}`}
+                              href={`https://aeneid.storyscan.io/tx/${article.transaction_hash}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-primary text-xs font-mono hover:underline flex items-center gap-1"

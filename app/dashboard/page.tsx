@@ -32,8 +32,17 @@ export default function DashboardPage() {
   }, [user]);
 
   const fetchArticles = async () => {
+    if (!user?.id) {
+      setLoadingArticles(false);
+      return;
+    }
+
     try {
-      const response = await fetch('/api/articles/my-articles');
+      const response = await fetch('/api/articles/my-articles', {
+        headers: {
+          'x-user-id': user.id,
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setArticles(data);
@@ -88,9 +97,9 @@ export default function DashboardPage() {
             <p className="text-muted-foreground mb-4">
               You need to be signed in to access the dashboard.
             </p>
-            <Link href="/">
-              <Button>Go to Home</Button>
-            </Link>
+            <Button asChild>
+              <Link href="/">Go to Home</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -113,12 +122,12 @@ export default function DashboardPage() {
           </Link>
 
           <div className="flex items-center gap-4">
-            <Link href="/editor">
-              <Button>
+            <Button asChild>
+              <Link href="/editor">
                 <PenSquare className="mr-2 h-4 w-4" />
                 New Article
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
       </header>
@@ -177,14 +186,14 @@ export default function DashboardPage() {
             <Card>
               <CardContent className="py-8 text-center">
                 <p className="text-muted-foreground mb-4">
-                  You haven't published any articles yet
+                  You haven&apos;t published any articles yet
                 </p>
-                <Link href="/editor">
-                  <Button>
+                <Button asChild>
+                  <Link href="/editor">
                     <PenSquare className="mr-2 h-4 w-4" />
                     Write Your First Article
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -211,7 +220,7 @@ export default function DashboardPage() {
                           <span>
                             Published {formatDate(article.published_at!)}
                           </span>
-                          {article.views > 0 && (
+                          {article.views && article.views > 0 && (
                             <span className="flex items-center gap-1">
                               <Eye className="h-3 w-3" />
                               {article.views}
@@ -231,11 +240,11 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Link href={`/article/${article.slug}`}>
-                          <Button variant="outline" size="sm">
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/article/${article.slug}`}>
                             <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
+                          </Link>
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
@@ -273,11 +282,11 @@ export default function DashboardPage() {
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        <Link href={`/editor?id=${article.id}`}>
-                          <Button variant="outline" size="sm">
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/editor?id=${article.id}`}>
                             <Edit className="h-4 w-4" />
-                          </Button>
-                        </Link>
+                          </Link>
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"

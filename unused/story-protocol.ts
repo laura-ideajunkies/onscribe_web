@@ -1,34 +1,57 @@
 import { StoryClient, StoryConfig } from '@story-protocol/core-sdk';
-import { createPublicClient, createWalletClient, http, Address } from 'viem';
+import { http, Address } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { sepolia } from 'viem/chains';
 import { StoryProtocolResponse } from '@/types';
 
-const chainId = parseInt(process.env.NEXT_PUBLIC_STORY_PROTOCOL_CHAIN_ID || '11155111');
-const rpcUrl = process.env.NEXT_PUBLIC_STORY_PROTOCOL_RPC_URL!;
-const privateKey = process.env.STORY_PROTOCOL_PRIVATE_KEY as `0x${string}`;
-
-// Create viem clients
-const publicClient = createPublicClient({
-  chain: sepolia,
-  transport: http(rpcUrl),
-});
-
-const account = privateKeyToAccount(privateKey);
-const walletClient = createWalletClient({
-  account,
-  chain: sepolia,
-  transport: http(rpcUrl),
-});
-
-// Initialize Story Protocol client
-const config: StoryConfig = {
-  account: account,
-  transport: http(rpcUrl),
-  chainId: 'sepolia',
+// Story Network Testnet configuration
+const storyTestnet = {
+  id: 1315,
+  name: 'Story Testnet',
+  network: 'story-testnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'IP',
+    symbol: 'IP',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://aeneid.storyrpc.io'],
+    },
+    public: {
+      http: ['https://aeneid.storyrpc.io'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Story Explorer',
+      url: 'https://testnet.storyscan.xyz',
+    },
+  },
+  testnet: true,
 };
 
-const client = StoryClient.newClient(config);
+const rpcUrl = process.env.RPC_PROVIDER_URL || 'https://aeneid.storyrpc.io';
+const privateKey = process.env.WALLET_PRIVATE_KEY as `0x${string}`;
+
+if (!privateKey) {
+  console.warn('WALLET_PRIVATE_KEY not set - Story Protocol integration will not work');
+}
+
+// Initialize Story Protocol client
+const account = privateKey ? privateKeyToAccount(privateKey) : undefined;
+
+const config: StoryConfig = {
+  account: account!,
+  transport: http(rpcUrl),
+  chainId: 'iliad', // Story testnet chain ID
+};
+
+let client: any;
+try {
+  client = StoryClient.newClient(config);
+} catch (error) {
+  console.error('Failed to initialize Story Protocol client:', error);
+}
 
 export async function registerIPAsset(
   ipfsHash: string,
@@ -39,6 +62,12 @@ export async function registerIPAsset(
   }
 ): Promise<StoryProtocolResponse> {
   try {
+    if (!client) {
+      throw new Error('Story Protocol client not initialized');
+    }
+
+    console.log('Registering IP Asset on Story Protocol with IPFS hash:', ipfsHash);
+
     // Register the IP Asset with Story Protocol
     const response = await client.ipAsset.mintAndRegisterIpAssetWithPilTerms({
       nftContract: process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS as Address,
@@ -54,6 +83,11 @@ export async function registerIPAsset(
     if (!response.txHash) {
       throw new Error('Transaction failed');
     }
+
+    console.log('Story Protocol registration successful:', {
+      ipAssetId: response.ipId,
+      txHash: response.txHash,
+    });
 
     return {
       ipAssetId: response.ipId as string,
@@ -72,6 +106,10 @@ export async function attachLicenseTerms(
   licenseTermsId: bigint
 ): Promise<string> {
   try {
+    if (!client) {
+      throw new Error('Story Protocol client not initialized');
+    }
+
     const response = await client.license.attachLicenseTerms({
       ipId: ipAssetId,
       licenseTermsId,
@@ -87,6 +125,10 @@ export async function attachLicenseTerms(
 
 export async function getIPAssetDetails(ipAssetId: Address) {
   try {
+    if (!client) {
+      throw new Error('Story Protocol client not initialized');
+    }
+
     const ipAsset = await client.ipAsset.getIpAsset(ipAssetId);
     return ipAsset;
   } catch (error) {
@@ -96,5 +138,5 @@ export async function getIPAssetDetails(ipAssetId: Address) {
 }
 
 export function getBlockExplorerUrl(txHash: string): string {
-  return `https://sepolia.etherscan.io/tx/${txHash}`;
+  return `https://testnet.storyscan.xyz/tx/${txHash}`;
 }

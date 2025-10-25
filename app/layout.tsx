@@ -4,6 +4,7 @@ import './globals.css';
 import { OpenfortProvider } from '@/components/providers/openfort-provider';
 import { AuthProvider } from '@/components/providers/auth-provider';
 import { WalletManager } from '@/components/wallet-manager';
+import { ProfileCompletionModal } from '@/components/profile-completion-modal';
 import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -33,6 +34,7 @@ export default function RootLayout({
         <OpenfortProvider>
           <AuthProvider>
             <WalletManager />
+            <ProfileCompletionModal />
             {children}
             <Toaster />
           </AuthProvider>

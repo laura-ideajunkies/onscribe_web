@@ -1,10 +1,13 @@
 export interface User {
   id: string;
   email: string;
-  name?: string;
+  first_name?: string;
+  surname?: string;
+  name?: string; // Computed from first_name + surname, or fallback
   avatar_url?: string;
   wallet_address?: string;
   openfort_player_id?: string;
+  profile_completed?: boolean; // True if first_name, surname, and email are set
   created_at: string;
   updated_at: string;
 }
@@ -16,8 +19,7 @@ export interface Article {
   content: string;
   excerpt?: string;
   cover_image?: string;
-  author_id: string;
-  author?: User;
+  openfort_player_id: string;
   status: 'draft' | 'published';
   ipfs_hash?: string;
   ip_asset_id?: string;

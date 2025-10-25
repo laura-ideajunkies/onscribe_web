@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getServiceSupabase } from '@/lib/supabase';
 import { Article } from '@/types';
 import { ArticleCard } from '@/components/article-card';
 import { ValuePropositionSidebar } from '@/components/value-proposition-sidebar';
@@ -10,21 +10,13 @@ import { PenSquare, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 async function getPublishedArticles(): Promise<Article[]> {
+  const supabase = getServiceSupabase();
+
   const { data, error } = await supabase
     .from('articles')
-    .select(
-      `
-      *,
-      author:users (
-        id,
-        name,
-        email,
-        avatar_url
-      )
-    `
-    )
+    .select('*')
     .eq('status', 'published')
-    .order('published_at', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(20);
 
   if (error) {
@@ -32,10 +24,7 @@ async function getPublishedArticles(): Promise<Article[]> {
     return [];
   }
 
-  return (data as any[]).map((article) => ({
-    ...article,
-    author: article.author,
-  })) as Article[];
+  return (data as any[]) as Article[];
 }
 
 function ArticlesFeed({ articles }: { articles: Article[] }) {
@@ -46,12 +35,12 @@ function ArticlesFeed({ articles }: { articles: Article[] }) {
         <p className="text-muted-foreground mb-6">
           Be the first to publish on OnScribe!
         </p>
-        <Link href="/editor">
-          <Button>
+        <Button asChild>
+          <Link href="/editor">
             <PenSquare className="mr-2 h-4 w-4" />
             Write Your First Article
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
     );
   }
@@ -81,15 +70,15 @@ export default async function HomePage() {
           </Link>
 
           <nav className="flex items-center gap-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" className="hover:bg-purple-50">Dashboard</Button>
-            </Link>
-            <Link href="/editor">
-              <Button variant="outline" className="btn-glass">
+            <Button asChild variant="ghost" className="hover:bg-purple-50">
+              <Link href="/dashboard">Dashboard</Link>
+            </Button>
+            <Button asChild variant="outline" className="btn-glass">
+              <Link href="/editor">
                 <PenSquare className="mr-2 h-4 w-4" />
                 Write
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <NavActions />
           </nav>
         </div>
@@ -102,17 +91,16 @@ export default async function HomePage() {
             Your Words. Your Proof.
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            OnScribe helps creators protect their work the moment it's published - giving every story, image, or idea a verifiable fingerprint of authorship.
+            OnScribe helps creators protect their work the moment it&apos;s published - giving every story, image, or idea a verifiable fingerprint of authorship.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-            <Link href="/editor">
-              <Button
-                size="lg"
-                className="btn-gradient text-lg px-10 py-6 shadow-lg hover:shadow-xl hover:scale-105"
-              >
-                Start Writing →
-              </Button>
-            </Link>
+            <Button
+              asChild
+              size="lg"
+              className="btn-gradient text-lg px-10 py-6 shadow-lg hover:shadow-xl hover:scale-105"
+            >
+              <Link href="/editor">Start Writing →</Link>
+            </Button>
           </div>
           <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
             Publish with confidence. Keep creative control. Build your reputation on your own terms.
@@ -131,7 +119,7 @@ export default async function HomePage() {
               OnScribe looks and feels like a writing platform - but behind every post, your work is registered with secure proof of ownership.
             </p>
             <p className="text-lg text-muted-foreground">
-              No jargon, no faffing with wallets - just <strong>authentic creative authorship</strong> that's yours to show and share.
+              No jargon, no faffing with wallets - just <strong>authentic creative authorship</strong> that&apos;s yours to show and share.
             </p>
           </div>
         </div>
@@ -179,7 +167,7 @@ export default async function HomePage() {
               We believe creative work deserves to be respected - not recycled, scraped, or claimed by algorithms.
             </p>
             <p className="text-lg md:text-xl text-foreground font-medium">
-              OnScribe gives creators <strong>the space and proof</strong> they need to publish with confidence, in a world that's learning to value originality again.
+              OnScribe gives creators <strong>the space and proof</strong> they need to publish with confidence, in a world that&apos;s learning to value originality again.
             </p>
           </div>
         </div>
@@ -191,12 +179,12 @@ export default async function HomePage() {
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             Own your voice. Start writing on OnScribe.
           </h2>
-          <Link href="/editor">
-            <Button size="lg" className="btn-gradient text-lg px-8">
+          <Button asChild size="lg" className="btn-gradient text-lg px-8">
+            <Link href="/editor">
               <PenSquare className="mr-2 h-5 w-5" />
               Start Writing
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </section>
 

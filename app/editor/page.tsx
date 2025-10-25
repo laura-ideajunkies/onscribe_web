@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/components/providers/auth-provider';
+import { useStoryClient } from '@/hooks/use-story-client';
+import { useSwitchChain } from 'wagmi';
 import { OpenfortButton as OpenfortAuthButton } from '@openfort/react';
 import {
   ArrowLeft,
@@ -20,17 +22,44 @@ import {
   Wallet,
 } from 'lucide-react';
 import { generateSlug, extractExcerpt } from '@/lib/utils';
+import { toHex, zeroAddress } from 'viem';
+import { LicenseTerms } from '@story-protocol/core-sdk';
+import { createHash } from 'crypto';
+
+// Non-Commercial Social Remix License Terms
+const nonCommercialSocialRemix: LicenseTerms = {
+  transferable: true,
+  royaltyPolicy: zeroAddress,
+  defaultMintingFee: 0n,
+  expiration: 0n,
+  commercialUse: false,
+  commercialAttribution: false,
+  commercializerChecker: zeroAddress,
+  commercializerCheckerData: '0x',
+  commercialRevShare: 0,
+  commercialRevCeiling: 0n,
+  derivativesAllowed: true,
+  derivativesAttribution: true,
+  derivativesApproval: false,
+  derivativesReciprocal: true,
+  derivativeRevCeiling: 0n,
+  currency: zeroAddress,
+  uri: 'https://github.com/piplabs/pil-document/blob/998c13e6ee1d04eb817aefd1fe16dfe8be3cd7a2/off-chain-terms/NCSR.json',
+};
 
 export default function EditorPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { client: storyClient, isReady: isStoryReady } = useStoryClient();
+  const { switchChainAsync } = useSwitchChain();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [coverImage, setCoverImage] = useState('');
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [publishingStep, setPublishingStep] = useState('');
 
   if (!user) {
     return (
@@ -44,14 +73,13 @@ export default function EditorPage() {
               You need to be signed in to create articles.
             </p>
             <OpenfortAuthButton.Custom>
-              {({ isLoading, show }) => (
+              {({ show }: any) => (
                 <Button
                   className="btn-gradient w-full"
                   onClick={show}
-                  disabled={isLoading}
                 >
                   <Wallet className="mr-2 h-4 w-4" />
-                  {isLoading ? 'Loading...' : 'Sign Up'}
+                  Sign Up
                 </Button>
               )}
             </OpenfortAuthButton.Custom>
@@ -71,11 +99,23 @@ export default function EditorPage() {
       return;
     }
 
+    if (!user?.id) {
+      toast({
+        title: 'Authentication required',
+        description: 'Please sign in to save articles',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const response = await fetch('/api/articles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id,
+        },
         body: JSON.stringify({
           title,
           content,
@@ -116,11 +156,34 @@ export default function EditorPage() {
       return;
     }
 
+    if (!user?.id) {
+      toast({
+        title: 'Authentication required',
+        description: 'Please sign in to publish articles',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!isStoryReady || !storyClient) {
+      toast({
+        title: 'Wallet not ready',
+        description: 'Please wait for your wallet to connect',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setPublishing(true);
     try {
+      // Step 1: Create article in Supabase (triggers IPFS upload in background)
+      setPublishingStep('Saving article...');
       const response = await fetch('/api/articles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id,
+        },
         body: JSON.stringify({
           title,
           content,
@@ -134,20 +197,92 @@ export default function EditorPage() {
 
       const article = await response.json();
 
+      // Step 2: Wait for IPFS upload to complete
+      setPublishingStep('Uploading to IPFS...');
+      let ipfsHash = article.ipfs_hash;
+      let attempts = 0;
+      const maxAttempts = 30; // 30 seconds max
+
+      while (!ipfsHash && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const checkResponse = await fetch(`/api/articles/${article.id}`, {
+          headers: { 'x-user-id': user.id },
+        });
+        const updatedArticle = await checkResponse.json();
+        ipfsHash = updatedArticle.ipfs_hash;
+        attempts++;
+      }
+
+      if (!ipfsHash) {
+        throw new Error('IPFS upload timed out');
+      }
+
+      // Step 3: Fetch the metadata from IPFS to hash it properly
+      const metadataResponse = await fetch(`https://${process.env.NEXT_PUBLIC_PINATA_GATEWAY}/ipfs/${ipfsHash}`);
+      const metadata = await metadataResponse.json();
+
+      // Calculate SHA-256 hash of the metadata JSON (as per Story docs)
+      const metadataHash = createHash('sha256')
+        .update(JSON.stringify(metadata))
+        .digest('hex');
+
+      // Step 3.5: Switch to Story Testnet chain
+      setPublishingStep('Switching to Story Protocol network...');
+      await switchChainAsync({ chainId: 1315 }); // Story Testnet chain ID
+
+      // Step 4: Register IP Asset on Story Protocol using user's wallet
+      setPublishingStep('Registering IP on Story Protocol...');
+
+      const storyResponse = await storyClient.ipAsset.registerIpAsset({
+        nft: {
+          type: 'mint',
+          spgNftContract: process.env.NEXT_PUBLIC_SPG_NFT_CONTRACT as `0x${string}`,
+        },
+        licenseTermsData: [
+          {
+            terms: nonCommercialSocialRemix,
+          },
+        ],
+        ipMetadata: {
+          ipMetadataURI: `https://${process.env.NEXT_PUBLIC_PINATA_GATEWAY}/ipfs/${ipfsHash}`,
+          ipMetadataHash: `0x${metadataHash}` as `0x${string}`,
+          nftMetadataURI: `https://${process.env.NEXT_PUBLIC_PINATA_GATEWAY}/ipfs/${ipfsHash}`,
+          nftMetadataHash: `0x${metadataHash}` as `0x${string}`,
+        },
+      });
+
+      // Step 5: Save Story Protocol data to Supabase
+      setPublishingStep('Saving blockchain data...');
+      await fetch(`/api/articles/${article.id}/story`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id,
+        },
+        body: JSON.stringify({
+          ip_asset_id: storyResponse.ipId,
+          nft_token_id: storyResponse.tokenId?.toString() || '',
+          transaction_hash: storyResponse.txHash,
+          license_terms_id: storyResponse.licenseTermsIds?.[0]?.toString() || '',
+        }),
+      });
+
       toast({
         title: 'Article published!',
-        description: 'Your article has been published and IP protection is being processed',
+        description: 'Your article has been published and registered as an IP Asset',
       });
 
       router.push(`/article/${article.slug}`);
     } catch (error) {
+      console.error('Publishing error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to publish article. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to publish article. Please try again.',
         variant: 'destructive',
       });
     } finally {
       setPublishing(false);
+      setPublishingStep('');
     }
   };
 
@@ -156,12 +291,12 @@ export default function EditorPage() {
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm">
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/dashboard">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Dashboard
-            </Button>
-          </Link>
+            </Link>
+          </Button>
 
           <div className="flex items-center gap-2">
             <Button
@@ -174,7 +309,7 @@ export default function EditorPage() {
             </Button>
             <Button onClick={handlePublish} disabled={saving || publishing}>
               <Send className="mr-2 h-4 w-4" />
-              {publishing ? 'Publishing...' : 'Publish'}
+              {publishing ? (publishingStep || 'Publishing...') : 'Publish'}
             </Button>
           </div>
         </div>
