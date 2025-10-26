@@ -30,6 +30,7 @@ export interface Article {
   created_at: string;
   updated_at: string;
   views?: number;
+  author?: User; // Populated via JOIN query
 }
 
 export interface IPRegistration {

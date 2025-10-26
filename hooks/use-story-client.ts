@@ -47,7 +47,7 @@ export function useStoryClient() {
         const client = createWalletClient({
           account: address,
           chain: storyTestnet,
-          transport: custom(provider),
+          transport: custom(provider as any),
         });
 
         console.log('useStoryClient - Wallet client created:', client);
