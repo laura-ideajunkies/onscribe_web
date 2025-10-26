@@ -12,6 +12,9 @@ import { ArrowLeft, Save, User as UserIcon, Wallet, Copy, Check, ExternalLink } 
 import { OpenfortButton as OpenfortAuthButton, useWallets } from '@openfort/react';
 import { useAccount } from 'wagmi';
 
+// Force dynamic rendering to ensure hooks work properly
+export const dynamic = 'force-dynamic';
+
 export default function ProfilePage() {
   const { user, loading, refreshUserProfile } = useAuth();
   const { toast } = useToast();
