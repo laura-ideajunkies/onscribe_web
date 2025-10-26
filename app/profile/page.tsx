@@ -228,16 +228,17 @@ export default function ProfilePage() {
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Share this address with judges to receive testnet tokens for testing.{' '}
+                      If you need testnet tokens to test out OnScribe, copy your wallet address and{' '}
                       <a
                         href="https://faucet.story.foundation"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline inline-flex items-center gap-1"
                       >
-                        Get testnet tokens
+                        click here
                         <ExternalLink className="h-3 w-3" />
                       </a>
+                      .
                     </p>
                   </div>
                 </div>
