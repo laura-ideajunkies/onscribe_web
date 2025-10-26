@@ -192,7 +192,7 @@ export default function ProfilePage() {
                 <div>
                   <CardTitle>Wallet Information</CardTitle>
                   <CardDescription>
-                    Your embedded wallet for blockchain transactions
+                    Your embedded wallet address for testing
                   </CardDescription>
                 </div>
               </div>
