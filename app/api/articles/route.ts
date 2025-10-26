@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Create article in database
-    const { data: article, error: dbError } = await (supabase.from('articles') as any)
+    const { data: article, error: dbError } = await supabase
+      .from('articles')
       .insert({
         title: body.title,
         slug,

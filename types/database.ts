@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       users: {
@@ -43,6 +43,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       articles: {
         Row: {
@@ -52,7 +53,7 @@ export interface Database {
           content: string;
           excerpt: string | null;
           cover_image: string | null;
-          author_id: string;
+          openfort_player_id: string;
           status: 'draft' | 'published';
           ipfs_hash: string | null;
           ip_asset_id: string | null;
@@ -71,7 +72,7 @@ export interface Database {
           content: string;
           excerpt?: string | null;
           cover_image?: string | null;
-          author_id: string;
+          openfort_player_id: string;
           status?: 'draft' | 'published';
           ipfs_hash?: string | null;
           ip_asset_id?: string | null;
@@ -90,7 +91,7 @@ export interface Database {
           content?: string;
           excerpt?: string | null;
           cover_image?: string | null;
-          author_id?: string;
+          openfort_player_id?: string;
           status?: 'draft' | 'published';
           ipfs_hash?: string | null;
           ip_asset_id?: string | null;
@@ -102,6 +103,7 @@ export interface Database {
           updated_at?: string;
           views?: number;
         };
+        Relationships: [];
       };
       ip_registrations: {
         Row: {
@@ -140,6 +142,7 @@ export interface Database {
           metadata?: Json;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: {
@@ -151,5 +154,6 @@ export interface Database {
     Enums: {
       article_status: 'draft' | 'published';
     };
+    Relationships: [];
   };
-}
+};
