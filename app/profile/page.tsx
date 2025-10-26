@@ -8,16 +8,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Save, User as UserIcon } from 'lucide-react';
-import { OpenfortButton as OpenfortAuthButton } from '@openfort/react';
+import { ArrowLeft, Save, User as UserIcon, Wallet, Copy, Check, ExternalLink } from 'lucide-react';
+import { OpenfortButton as OpenfortAuthButton, useWallets } from '@openfort/react';
 
 export default function ProfilePage() {
   const { user, loading, refreshUserProfile } = useAuth();
   const { toast } = useToast();
+  const { wallets, isLoadingWallets } = useWallets();
   const [firstName, setFirstName] = useState('');
   const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
   const [saving, setSaving] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState(false);
+
+  // Get wallet address from the first wallet
+  const walletAddress = wallets.length > 0 ? wallets[0].address : null;
 
   // Populate form with user data
   useEffect(() => {
@@ -39,6 +44,26 @@ export default function ProfilePage() {
     firstName.trim() !== (user?.first_name || '') ||
     surname.trim() !== (user?.surname || '') ||
     email.trim() !== (user?.email || '');
+
+  const handleCopyAddress = async () => {
+    if (!walletAddress) return;
+
+    try {
+      await navigator.clipboard.writeText(walletAddress);
+      setCopiedAddress(true);
+      toast({
+        title: 'Address Copied',
+        description: 'Wallet address copied to clipboard',
+      });
+      setTimeout(() => setCopiedAddress(false), 2000);
+    } catch (error) {
+      toast({
+        title: 'Copy Failed',
+        description: 'Could not copy address to clipboard',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,7 +166,72 @@ export default function ProfilePage() {
 
       {/* Profile Form */}
       <main className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Wallet Information Card */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <Wallet className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Wallet Information</CardTitle>
+                  <CardDescription>
+                    Your embedded wallet for blockchain transactions
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoadingWallets ? (
+                <div className="text-sm text-muted-foreground">
+                  Loading wallet...
+                </div>
+              ) : walletAddress ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Wallet Address</Label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-muted px-3 py-2 rounded-md font-mono text-sm break-all">
+                        {walletAddress}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={handleCopyAddress}
+                        className="shrink-0"
+                      >
+                        {copiedAddress ? (
+                          <Check className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Share this address with judges to receive testnet tokens for testing.{' '}
+                      <a
+                        href="https://faucet.story.foundation"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline inline-flex items-center gap-1"
+                      >
+                        Get testnet tokens
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  No wallet found. Your wallet will be created automatically when you sign in.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* User Profile Card */}
           <Card>
             <CardHeader>
               <div className="flex items-center gap-3">
