@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
  * the encryption session which the SDK uses for automatic wallet recovery.
  */
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // Get Shield encryption share from environment

@@ -3,6 +3,8 @@ import { getServiceSupabase } from '@/lib/supabase';
 import { UpdateArticleInput } from '@/types';
 import { Database } from '@/types/database';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }

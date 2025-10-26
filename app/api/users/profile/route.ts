@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // GET: Fetch user profile by openfort_player_id
 export async function GET(request: NextRequest) {
   try {

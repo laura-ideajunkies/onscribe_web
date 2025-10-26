@@ -4,6 +4,8 @@ import { uploadToIPFS } from '@/lib/ipfs';
 import { generateSlug } from '@/lib/utils';
 import { CreateArticleInput } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body: CreateArticleInput = await request.json();
