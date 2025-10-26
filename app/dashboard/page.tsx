@@ -40,7 +40,7 @@ export default function DashboardPage() {
     try {
       const response = await fetch('/api/articles/my-articles', {
         headers: {
-          'x-user-id': user.id,
+          'x-user-id': user.openfort_player_id!,
         },
       });
       if (response.ok) {

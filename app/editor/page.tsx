@@ -114,7 +114,7 @@ export default function EditorPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user.id,
+          'x-user-id': user.openfort_player_id!,
         },
         body: JSON.stringify({
           title,
@@ -182,7 +182,7 @@ export default function EditorPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user.id,
+          'x-user-id': user.openfort_player_id!,
         },
         body: JSON.stringify({
           title,
@@ -206,7 +206,7 @@ export default function EditorPage() {
       while (!ipfsHash && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 1000));
         const checkResponse = await fetch(`/api/articles/${article.id}`, {
-          headers: { 'x-user-id': user.id },
+          headers: { 'x-user-id': user.openfort_player_id! },
         });
         const updatedArticle = await checkResponse.json();
         ipfsHash = updatedArticle.ipfs_hash;
@@ -257,7 +257,7 @@ export default function EditorPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user.id,
+          'x-user-id': user.openfort_player_id!,
         },
         body: JSON.stringify({
           ip_asset_id: storyResponse.ipId,
