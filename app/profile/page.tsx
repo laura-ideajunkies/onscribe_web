@@ -10,19 +10,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Save, User as UserIcon, Wallet, Copy, Check, ExternalLink } from 'lucide-react';
 import { OpenfortButton as OpenfortAuthButton, useWallets } from '@openfort/react';
+import { useAccount } from 'wagmi';
 
 export default function ProfilePage() {
   const { user, loading, refreshUserProfile } = useAuth();
   const { toast } = useToast();
   const { wallets, isLoadingWallets } = useWallets();
+  const { address: wagmiAddress } = useAccount();
   const [firstName, setFirstName] = useState('');
   const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
   const [saving, setSaving] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState(false);
 
-  // Get wallet address from the first wallet
-  const walletAddress = wallets.length > 0 ? wallets[0].address : null;
+  // Get wallet address from Openfort wallet or wagmi as fallback
+  const openfortAddress = wallets.length > 0 ? wallets[0].address : null;
+  const walletAddress = openfortAddress || wagmiAddress || null;
+
+  // Debug wallet information
+  useEffect(() => {
+    console.log('Profile - Wallets:', wallets);
+    console.log('Profile - isLoadingWallets:', isLoadingWallets);
+    console.log('Profile - openfortAddress:', openfortAddress);
+    console.log('Profile - wagmiAddress:', wagmiAddress);
+    console.log('Profile - final walletAddress:', walletAddress);
+    if (wallets.length > 0) {
+      console.log('Profile - First wallet object:', wallets[0]);
+    }
+  }, [wallets, isLoadingWallets, openfortAddress, wagmiAddress, walletAddress]);
 
   // Populate form with user data
   useEffect(() => {
