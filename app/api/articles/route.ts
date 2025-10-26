@@ -11,8 +11,11 @@ export async function POST(request: NextRequest) {
 
     // Get Openfort player ID from header
     const openfortPlayerId = request.headers.get('x-user-id');
+    console.log('POST /api/articles - openfortPlayerId:', openfortPlayerId);
+
     if (!openfortPlayerId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.error('POST /api/articles - Missing openfortPlayerId');
+      return NextResponse.json({ error: 'Unauthorized - missing user ID' }, { status: 401 });
     }
 
     // Generate slug
@@ -26,13 +29,21 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (existing) {
+      console.log('POST /api/articles - Duplicate slug:', slug);
       return NextResponse.json(
-        { error: 'An article with this title already exists' },
+        { error: `An article with this title already exists (slug: ${slug})` },
         { status: 400 }
       );
     }
 
     // Create article in database
+    console.log('POST /api/articles - Creating article with data:', {
+      title: body.title,
+      slug,
+      openfort_player_id: openfortPlayerId,
+      status: body.status
+    });
+
     const { data: article, error: dbError } = await supabase
       .from('articles')
       .insert({
@@ -49,9 +60,9 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (dbError || !article) {
-      console.error('Database error:', dbError);
+      console.error('POST /api/articles - Database error:', dbError);
       return NextResponse.json(
-        { error: 'Failed to create article' },
+        { error: `Failed to create article: ${dbError?.message || 'Unknown error'}` },
         { status: 500 }
       );
     }
